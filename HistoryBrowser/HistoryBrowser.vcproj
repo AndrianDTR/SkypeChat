@@ -136,6 +136,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
+				AdditionalDependencies="advapi32.lib comctl32.lib uuid.lib rpcrt4.lib wxbase28u.lib  wxmsw28u_core.lib wxmsw28u_adv.lib wxcode_msw28u_databaselayer_sqlite.lib "
 				LinkIncremental="1"
 				AdditionalLibraryDirectories="&quot;..\wxWidgets-2.8.12\lib\vc_lib&quot;;D:\Projects\SkypeChat\databaselayer\lib\vc_lib"
 				GenerateDebugInformation="true"
