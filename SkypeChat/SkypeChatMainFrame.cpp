@@ -23,7 +23,21 @@ void SkypeChatMainFrame::OnSelectAll( wxCommandEvent& event )
 
 void SkypeChatMainFrame::OnRemove( wxCommandEvent& event )
 {
-	// TODO: Implement OnRemove
+	wxString query = _T("");
+	long nItem = 0;
+	do
+	{
+		long nItem = m_listMsgs->GetNextItem(nItem, wxLIST_NEXT_ALL, wxLIST_STATE_SELECTED);
+		if(wxNOT_FOUND == nItem)
+			break;
+			
+		long id = m_listMsgs->GetItemData(nItem);
+		query += wxString::Format(_T("delete from messages where id = %d;"), id);
+		
+		cout << "Remove ID:" << id << endl;
+	}while(1);
+	
+	//m_db->ExecuteUpdate(query);
 }
 
 void SkypeChatMainFrame::OnChange( wxCommandEvent& event )
@@ -56,7 +70,7 @@ void SkypeChatMainFrame::Init()
 	m_listMsgs->InsertColumn(2, itemCol);
 
 	itemCol.SetText(_T("Msg"));
-	itemCol.SetWidth(-1);
+	itemCol.SetWidth(1200);
 	itemCol.SetAlign(wxLIST_FORMAT_LEFT);
 	m_listMsgs->InsertColumn(3, itemCol);
 }
@@ -91,8 +105,7 @@ void SkypeChatMainFrame::Connect()
 void SkypeChatMainFrame::InitContacts()
 {
 	m_comboContact->Clear();
-	
-	wxSQLite3ResultSet set = m_db->ExecuteQuery(wxT("select id, skypename, displayname from contacts order by displayname"));
+	wxSQLite3ResultSet set = m_db->ExecuteQuery(_T("select id, skypename, displayname from contacts order by displayname"));
 	
 	while (set.NextRow())
 	{
@@ -100,7 +113,7 @@ void SkypeChatMainFrame::InitContacts()
 		wxString sname = set.GetAsString(1);
 		wxString s = wxString::Format(_T("%s (%s)"), name.GetData(), sname.GetData());
 		
-		m_comboContact->Append(s);
+		m_comboContact->Append(s, new MyClientId(set.GetInt(_T("id"))));
 	}
 	set.Finalize();
 }
@@ -111,22 +124,43 @@ void SkypeChatMainFrame::RefreshMessages()
 
 void SkypeChatMainFrame::OnContactChage(wxCommandEvent& event)
 {
-	m_listMsgs->DeleteAllItems();
-	wxString query = wxString::Format(_T("select id, author, dialog_partner, body_xml from messages where author='%s' or dialog_partner='%s' order by timestamp desc"),
-	);
+	int nIndex = m_comboContact->GetSelection();
+	if(wxNOT_FOUND == nIndex)
+		return;
+		
+	MyClientId* nId = (MyClientId*)m_comboContact->GetClientObject(nIndex);
 	
+	m_listMsgs->DeleteAllItems();
+	
+	wxString sname;
+	wxString query = wxString::Format(_T("select skypename from contacts where id=%d"), nId->GetId());
 	wxSQLite3ResultSet set = m_db->ExecuteQuery(query);
 	
 	while (set.NextRow())
 	{
-		wxString name = set.GetAsString(2);
-		wxString sname = set.GetAsString(1);
-		wxString s = wxString::Format(_T("%s (%s)"), name.GetData(), sname.GetData());
-		
-		long itemIndex = m_listMsgs->InsertItem(0, _(" "));
-		m_listMsgs->SetItem(itemIndex, 1, name);
-		m_listMsgs->SetItem(itemIndex, 2, sname);
-
+		sname = set.GetAsString(0);
 	}
+	set.Finalize();
+	
+	query = wxString::Format(_T("select id, author, dialog_partner, body_xml from messages where author='%s' or dialog_partner='%s' order by timestamp desc"),
+	sname.GetData(), sname.GetData());
+	
+	set = m_db->ExecuteQuery(query);
+	
+	while (set.NextRow())
+	{
+		long mid = set.GetInt(0);
+		wxString id = set.GetAsString(0);
+		wxString from = set.GetAsString(1);
+		wxString to = set.GetAsString(2);
+		wxString msg = set.GetAsString(3);
+		
+		long itemIndex = m_listMsgs->InsertItem(m_listMsgs->GetItemCount(), id);
+		m_listMsgs->SetItem(itemIndex, 1, from);
+		m_listMsgs->SetItem(itemIndex, 2, to);
+		m_listMsgs->SetItem(itemIndex, 3, msg);
+		m_listMsgs->SetItemData(itemIndex, mid);
+	}
+	
 	set.Finalize();
 }

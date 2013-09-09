@@ -62,7 +62,7 @@
         <ClangCmpFlagsC/>
         <ClangCmpFlags/>
         <ClangPP/>
-        <SearchPaths/>
+        <SearchPaths>./wxWidgets-2.8.12/include/wx</SearchPaths>
       </Completion>
     </Configuration>
     <Configuration Name="Release" CompilerType="gnu g++" DebuggerType="GNU gdb debugger" Type="Executable" BuildCmpWithGlobalSettings="append" BuildLnkWithGlobalSettings="append" BuildResWithGlobalSettings="append">
