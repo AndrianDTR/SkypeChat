@@ -74,8 +74,8 @@ void SkypeChatMainFrame::Init()
 	m_listMsgs->ClearAll();
 	
 	wxListItem itemCol;
-	itemCol.SetText(_T(" "));
-	itemCol.SetWidth(50);
+	itemCol.SetText(_T("Msg ID"));
+	itemCol.SetWidth(60);
 	m_listMsgs->InsertColumn(0, itemCol);
 
 	itemCol.SetText(_T("From"));
@@ -88,10 +88,15 @@ void SkypeChatMainFrame::Init()
 	itemCol.SetAlign(wxLIST_FORMAT_LEFT);
 	m_listMsgs->InsertColumn(2, itemCol);
 
+	itemCol.SetText(_T("Date"));
+	itemCol.SetWidth(150);
+	itemCol.SetAlign(wxLIST_FORMAT_LEFT);
+	m_listMsgs->InsertColumn(3, itemCol);
+
 	itemCol.SetText(_T("Msg"));
 	itemCol.SetWidth(1200);
 	itemCol.SetAlign(wxLIST_FORMAT_LEFT);
-	m_listMsgs->InsertColumn(3, itemCol);
+	m_listMsgs->InsertColumn(4, itemCol);
 	
 	if(!Connect())
 	{
@@ -172,7 +177,7 @@ void SkypeChatMainFrame::RefreshMessages()
 	}
 	set->Close();
 
-	query = wxString::Format(_("select id, author, dialog_partner, body_xml from messages where author='%s' or dialog_partner='%s' order by timestamp desc"),
+	query = wxString::Format(_("select id, author, dialog_partner, timestamp, body_xml from messages where author='%s' or dialog_partner='%s' order by timestamp desc"),
 		sname.GetData(), sname.GetData());
 
 	set = m_db->ExecuteQuery(query);
@@ -183,12 +188,15 @@ void SkypeChatMainFrame::RefreshMessages()
 		wxString id = set->GetResultString(_("id"));
 		wxString from = set->GetResultString(_("author"));
 		wxString to = set->GetResultString(_("dialog_partner"));
+		wxDateTime xTime = wxDateTime(set->GetResultDouble(_("timestamp")));
+		wxString date = xTime.Format(_("%Y-%M-%D %H:%m:%s"));
 		wxString msg = set->GetResultString(_("body_xml"));
 
 		long itemIndex = m_listMsgs->InsertItem(m_listMsgs->GetItemCount(), id);
 		m_listMsgs->SetItem(itemIndex, 1, from);
 		m_listMsgs->SetItem(itemIndex, 2, to);
-		m_listMsgs->SetItem(itemIndex, 3, msg);
+		m_listMsgs->SetItem(itemIndex, 3, date);
+		m_listMsgs->SetItem(itemIndex, 4, msg);
 		m_listMsgs->SetItemData(itemIndex, mid);
 	}
 
