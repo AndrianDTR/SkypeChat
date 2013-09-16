@@ -2,6 +2,8 @@
 #include <DatabaseLayerException.h>
 #include <wx/filedlg.h>
 #include <wx/listimpl.cpp>
+#include <wx/stdpaths.h>
+#include <wx/filename.h>
 
 SkypeChatMainFrame::SkypeChatMainFrame( wxWindow* parent ) : MainFrame( parent )
 {
@@ -14,8 +16,63 @@ SkypeChatMainFrame::SkypeChatMainFrame( wxWindow* parent ) : MainFrame( parent )
 		
 	m_szDbFile = openFileDialog.GetPath();
 	
+	m_pConfig = new wxConfig(_("HistoryBrowser"));
+	wxConfig::Set(m_pConfig);
+	m_pConfig->DeleteAll();
+	if ( !m_pConfig->Read(_("ContactsTbl"), &m_szContactsTbl) ) 
+	{
+		m_szContactsTbl =  _("Contacts");
+	}
+	if ( !m_pConfig->Read(_("MsgsTbl"), &m_szMsgsTbl) ) 
+	{
+		m_szMsgsTbl = _("Messages");
+	}
+	
+	if ( !m_pConfig->Read(_("ContactsSql"), &m_szContactsSql) ) 
+	{
+		m_szContactsSql = _("select id, skypename, displayname from contacts order by displayname");
+	}
+	if ( !m_pConfig->Read(_("SNameSql"), &m_szSNameSql) ) 
+	{
+		m_szSNameSql = _("select skypename from contacts where id=%d");
+	}
+	if ( !m_pConfig->Read(_("MsgsSql"), &m_szMsgsSql) ) 
+	{
+		m_szMsgsSql = _("select id, author, dialog_partner, timestamp, body_xml from messages where author='%s' or dialog_partner='%s' order by timestamp desc");
+	}
+	if ( !m_pConfig->Read(_("RemMsgsSql"), &m_szRemMsgSql) ) 
+	{
+		m_szRemMsgSql = _T("delete from messages where id = %d;\n");
+	}
+	
+	if ( !m_pConfig->Read(_("MsgsListFields"), &m_szMsgsListFields) ) 
+	{
+		m_szMsgsListFields = _("A:B:C:D:E");
+	}
+
 	Init();
 	InitContacts();
+}
+
+SkypeChatMainFrame::~SkypeChatMainFrame()
+{
+	if(m_pConfig)
+	{
+		m_pConfig->Write(_("ContactsTbl"), m_szContactsTbl);
+		m_pConfig->Write(_("MsgsTbl"), m_szMsgsTbl);
+		
+		m_pConfig->Write(_("ContactsSql"), m_szContactsSql);
+		m_pConfig->Write(_("SNameSql"), m_szSNameSql);
+		m_pConfig->Write(_("MsgsSql"), m_szMsgsSql);
+		m_pConfig->Write(_("RemMsgsSql"), m_szRemMsgSql);
+
+		m_pConfig->Write(_("MsgsListFields"), m_szMsgsListFields);
+
+		m_pConfig->Flush();
+		delete m_pConfig;
+		m_pConfig=NULL;
+	}
+	wxConfigBase::Set(NULL);
 }
 
 void SkypeChatMainFrame::OnRefresh( wxCommandEvent& event )
@@ -44,7 +101,7 @@ void SkypeChatMainFrame::OnRemove( wxCommandEvent& event )
 			break;
 			
 		long id = m_listMsgs->GetItemData(nItem);
-		query += wxString::Format(_T("delete from messages where id = %d;\n"), id);
+		query += wxString::Format(m_szRemMsgSql, id);
 		
 		if(cnt > 10)
 		{
@@ -114,12 +171,12 @@ bool SkypeChatMainFrame::Connect()
 	try
 	{
 		m_db->Open(m_szDbFile);
-		if(!m_db->TableExists(_T("Contacts")))
+		if(!m_db->TableExists(m_szContactsTbl))
 		{
 			throw DatabaseLayerException(1, _T("Table 'contacts' does not exist."));
 		}
 		
-		if(!m_db->TableExists(_T("Messages")))
+		if(!m_db->TableExists(m_szMsgsTbl))
 		{
 			throw DatabaseLayerException(1, _T("Table 'messages' does not exist."));
 		}
@@ -144,7 +201,7 @@ bool SkypeChatMainFrame::Connect()
 void SkypeChatMainFrame::InitContacts()
 {
 	m_comboContact->Clear();
-	DatabaseResultSet* set = m_db->ExecuteQuery(_T("select id, skypename, displayname from contacts order by displayname"));
+	DatabaseResultSet* set = m_db->ExecuteQuery(m_szContactsSql);
 	
 	while (set->Next())
 	{
@@ -168,7 +225,7 @@ void SkypeChatMainFrame::RefreshMessages()
 	m_listMsgs->DeleteAllItems();
 
 	wxString sname;
-	wxString query = wxString::Format(_T("select skypename from contacts where id=%d"), nId->GetId());
+	wxString query = wxString::Format(m_szSNameSql, nId->GetId());
 	DatabaseResultSet* set = m_db->ExecuteQuery(query);
 
 	while (set->Next())
@@ -177,7 +234,7 @@ void SkypeChatMainFrame::RefreshMessages()
 	}
 	set->Close();
 
-	query = wxString::Format(_("select id, author, dialog_partner, timestamp, body_xml from messages where author='%s' or dialog_partner='%s' order by timestamp desc"),
+	query = wxString::Format(m_szMsgsSql,
 		sname.GetData(), sname.GetData());
 
 	set = m_db->ExecuteQuery(query);
