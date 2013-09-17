@@ -182,7 +182,7 @@ bool SkypeChatMainFrame::Connect()
 		}
 		res = true;
 	}
-	catch(DatabaseLayerException& e)
+	catch(DatabaseLayerException)
 	{
 		m_db->Close();
 		m_db = NULL;
