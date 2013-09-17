@@ -16,8 +16,8 @@ SkypeChatMainFrame::SkypeChatMainFrame( wxWindow* parent ) : MainFrame( parent )
 		
 	m_szDbFile = openFileDialog.GetPath();
 	
-	m_pConfig = new wxConfig(_("HistoryBrowser"));
-	wxConfig::Set(m_pConfig);
+	m_pConfig = new wxFileConfig(_(""), _(""), _("HistoryBrowser"));
+	wxFileConfig::Set(m_pConfig);
 	m_pConfig->DeleteAll();
 	if ( !m_pConfig->Read(_("ContactsTbl"), &m_szContactsTbl) ) 
 	{
@@ -234,8 +234,7 @@ void SkypeChatMainFrame::RefreshMessages()
 	}
 	set->Close();
 
-	query = wxString::Format(m_szMsgsSql,
-		sname.GetData(), sname.GetData());
+	query = wxString::Format(m_szMsgsSql, sname.GetData(), sname.GetData());
 
 	set = m_db->ExecuteQuery(query);
 
@@ -245,8 +244,8 @@ void SkypeChatMainFrame::RefreshMessages()
 		wxString id = set->GetResultString(_("id"));
 		wxString from = set->GetResultString(_("author"));
 		wxString to = set->GetResultString(_("dialog_partner"));
-		wxDateTime xTime = wxDateTime(set->GetResultDouble(_("timestamp")));
-		wxString date = xTime.Format(_("%Y-%M-%D %H:%m:%s"));
+		long ticks = set->GetResultLong(_("timestamp"));
+		wxString date = wxDateTime((time_t)ticks).Format(_T("%Y-%m-%d %H:%M:%S"));
 		wxString msg = set->GetResultString(_("body_xml"));
 
 		long itemIndex = m_listMsgs->InsertItem(m_listMsgs->GetItemCount(), id);
