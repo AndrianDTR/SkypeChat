@@ -1,15 +1,20 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <CodeLite_Workspace Name="SkypeChat" Database="./SkypeChat.tags">
-  <Project Name="SkypeChat" Path="SkypeChat/SkypeChat.project" Active="Yes"/>
-  <BuildMatrix>
-    <WorkspaceConfiguration Name="Debug" Selected="yes">
-      <Project Name="SkypeChat" ConfigName="Debug"/>
-    </WorkspaceConfiguration>
-    <WorkspaceConfiguration Name="Release" Selected="yes">
-      <Project Name="SkypeChat" ConfigName="Release"/>
-    </WorkspaceConfiguration>
-  </BuildMatrix>
   <Environment>
     <![CDATA[]]>
   </Environment>
+  <Project Name="HistoryBrowser" Path="HistoryBrowser/HistoryBrowser.project" Active="Yes"/>
+  <Project Name="databaselayer" Path="databaselayer/databaselayer.project"/>
+  <BuildMatrix>
+    <WorkspaceConfiguration Name="Debug" Selected="yes">
+      <Project Name="SkypeChat" ConfigName="Debug"/>
+      <Project Name="HistoryBrowser" ConfigName="Debug"/>
+      <Project Name="databaselayer" ConfigName="Debug"/>
+    </WorkspaceConfiguration>
+    <WorkspaceConfiguration Name="Release" Selected="yes">
+      <Project Name="SkypeChat" ConfigName="Release"/>
+      <Project Name="HistoryBrowser" ConfigName="Release"/>
+      <Project Name="databaselayer" ConfigName="Release"/>
+    </WorkspaceConfiguration>
+  </BuildMatrix>
 </CodeLite_Workspace>
