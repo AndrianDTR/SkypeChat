@@ -13,6 +13,9 @@ SkypeChatMainFrame::SkypeChatMainFrame( wxWindow* parent ) : MainFrame( parent )
 		_("SQLite DB files (*.db)|*.db|All files (*.*)|*.*"), wxFD_OPEN|wxFD_FILE_MUST_EXIST);
 	if (openFileDialog.ShowModal() == wxID_CANCEL)
 		exit(0);
+	
+	wxIcon ico = wxICON(IDI_ICON1);
+	this->SetIcon(ico);
 		
 	m_szDbFile = openFileDialog.GetPath();
 	
